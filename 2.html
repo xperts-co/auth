@@ -3,371 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup Your Profile - ALLEN</title>
-    <style>
-        /* Basic Reset and Font */
-        body, html {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f4f8;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Main container */
-        .container {
-            max-width: 400px;
-            margin: auto;
-            background-color: #f0f4f8;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header with back arrow and progress bar */
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .back-arrow {
-            font-size: 24px;
-            text-decoration: none;
-            color: #555;
-            background-color: #e0e0e0;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            cursor: pointer;
-        }
-        
-        .progress-bar-container {
-            flex-grow: 1;
-            height: 6px;
-            background-color: #dcdcdc;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        #progress-bar-fill {
-            height: 100%;
-            width: 0%; /* Initially 0% */
-            background-color: #007bff;
-            border-radius: 3px;
-            transition: width 0.4s ease-in-out;
-        }
-
-        /* General Step Styling */
-        .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-        }
-
-        .step-image {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 25px;
-        }
-
-        .step-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .step-subtitle, .step-question {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 25px;
-        }
-        
-        /* Form element styling */
-        .input-field {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #dcdcdc;
-            border-radius: 12px;
-            font-size: 16px;
-            box-sizing: border-box;
-            background-color: #fff;
-            margin-bottom: 20px;
-        }
-        
-        /* Choice buttons (NEET, JEE, 6th, etc.) */
-        .choices {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .choice-btn {
-            padding: 12px 25px;
-            border: 1px solid #dcdcdc;
-            border-radius: 20px;
-            background-color: #fff;
-            color: #333;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .choice-btn:hover {
-            background-color: #f5f5f5;
-        }
-
-        .choice-btn.selected {
-            background-color: #007bff;
-            color: #fff;
-            border-color: #007bff;
-        }
-        
-        /* General purpose button */
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn-primary {
-            background-color: #007bff;
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background-color: #e0e0e0;
-            color: #6d6d6d;
-        }
-
-        /* Utility class to hide elements */
-        .hidden {
-            display: none;
-        }
-    </style>
+    <title>Join ALLEN</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <span id="back-btn" class="back-arrow">←</span>
-            <div class="progress-bar-container">
-                <div id="progress-bar-fill"></div>
+        <!-- Step 1: Name -->
+        <div id="step1">
+            <img src="https://via.placeholder.com/150/E0F7FA/808080?Text=Illustration" alt="Illustration" class="illustration">
+            <h2>We are excited to have you join the ALLEN family!</h2>
+            <p>What should we call you?</p>
+            <div class="form-group">
+                <input type="text" id="fullName" class="form-input" placeholder="Student's full name" required>
             </div>
+            <button class="btn" onclick="nextStep(2)">Next</button>
         </div>
 
-        <!-- Step 1: Get Name -->
-        <div id="step-name" class="step">
-            <img src="https://img.icons8.com/color/96/idea.png" alt="Lightbulb Icon" class="step-image"/>
-            <h2 class="step-title">We are excited to have you join the ALLEN family!</h2>
-            <p class="step-question">What should we call you?</p>
-            <input type="text" id="student-name" class="input-field" placeholder="Student's full name">
-            <button id="name-next-btn" class="btn btn-secondary">Next</button>
-        </div>
-
-        <!-- Step 2: Get Goal -->
-        <div id="step-goal" class="step hidden">
-            <img src="https://img.icons8.com/plasticine/100/trophy.png" alt="Trophy Icon" class="step-image"/>
-            <h2 id="welcome-title" class="step-title">Hi, [Name]</h2>
-            <p class="step-subtitle">ALLEN can help you prepare better!</p>
-            <p class="step-question">Please tell us your goal?</p>
-            <div class="choices">
-                <button class="choice-btn" data-goal="NEET">NEET</button>
-                <button class="choice-btn" data-goal="JEE">JEE</button>
-                <button class="choice-btn" data-goal="Class 6-10">Class 6-10</button>
+        <!-- Step 2: Credentials -->
+        <div id="step2" style="display: none;">
+             <h2>Create your account</h2>
+             <p>Enter your email and a secure password.</p>
+            <div class="form-group">
+                <input type="email" id="email" class="form-input" placeholder="Email" required>
             </div>
-        </div>
-
-        <!-- Step 3: Get Class -->
-        <div id="step-class" class="step hidden">
-            <img src="https://img.icons8.com/plasticine/100/trophy.png" alt="Trophy Icon" class="step-image"/>
-            <p id="class-selection-info" class="step-subtitle"></p>
-            <h2 id="class-selection-title" class="step-title"></h2>
-            <div id="class-choices" class="choices">
-                <!-- Class buttons will be generated by JS here -->
+            <div class="form-group">
+                <input type="password" id="password" class="form-input" placeholder="Password" required>
             </div>
+            <button class="btn" onclick="nextStep(3)">Next</button>
         </div>
 
-        <!-- Step 4: Get Board -->
-        <div id="step-board" class="step hidden">
-            <img src="https://img.icons8.com/plasticine/100/trophy.png" alt="Trophy Icon" class="step-image"/>
-            <h2 class="step-title">One last thing...</h2>
-            <p class="step-question">Which board are you studying in?</p>
-            <div class="choices">
-                <button class="choice-btn" data-board="CBSE">CBSE</button>
-                <button class="choice-btn" data-board="ICSE">ICSE</button>
-                <button class="choice-btn" data-board="State Board">State Board</button>
-                <button class="choice-btn" data-board="Others">Others</button>
+        <!-- Step 3: Class Selection -->
+        <div id="step3" style="display: none;">
+            <img src="https://via.placeholder.com/150/C8E6C9/808080?Text=Trophy" alt="Illustration" class="illustration">
+            <h2>You selected, Class 6-10!</h2>
+            <p>Please select your current class.</p>
+            <div class="class-selector">
+                <button class="class-btn" data-class="6">6th</button>
+                <button class="class-btn" data-class="7">7th</button>
+                <button class="class-btn" data-class="8">8th</button>
+                <button class="class-btn" data-class="9">9th</button>
+                <button class="class-btn" data-class="10">10th</button>
             </div>
+            <button class="btn" onclick="submitSignup()">Finish Setup</button>
         </div>
 
-        <!-- Step 5: Final Thank You -->
-        <div id="step-final" class="step hidden">
-            <img src="https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-backpack-back-to-school-flaticons-lineal-color-flat-icons-2.png" alt="Backpack Icon" class="step-image"/>
-            <h2 class="step-title">Thank you for sharing your details!</h2>
-            <p class="step-subtitle">Let's setup your ALLEN experience</p>
-            <button id="finish-btn" class="btn btn-primary">Lets Go!</button>
+        <!-- Step 4: Thank You -->
+        <div id="step4" style="display: none;">
+            <img src="https://via.placeholder.com/150/B3E5FC/808080?Text=Backpack" alt="Illustration" class="illustration">
+            <h2>Thank you for sharing your details!</h2>
+            <p>Let's setup your ALLEN experience</p>
+            <button class="btn" onclick="goToDashboard()">Lets Go!</button>
         </div>
+        <p id="error-message" class="error-message"></p>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+
+    <!-- Local Scripts -->
+    <script src="app.js"></script>
     <script>
-        // --- DOM Elements ---
-        const steps = [
-            document.getElementById('step-name'),
-            document.getElementById('step-goal'),
-            document.getElementById('step-class'),
-            document.getElementById('step-board'),
-            document.getElementById('step-final')
-        ];
-        const progressBarFill = document.getElementById('progress-bar-fill');
-        const backBtn = document.getElementById('back-btn');
+        const studentData = {};
+        const errorMessage = document.getElementById('error-message');
 
-        // Step 1 Elements
-        const studentNameInput = document.getElementById('student-name');
-        const nameNextBtn = document.getElementById('name-next-btn');
+        function nextStep(step) {
+            errorMessage.textContent = '';
+            if (step === 2) {
+                const name = document.getElementById('fullName').value;
+                if (!name) {
+                    errorMessage.textContent = "Please enter your full name.";
+                    return;
+                }
+                studentData.name = name;
+            }
+            if (step === 3) {
+                 const email = document.getElementById('email').value;
+                 const password = document.getElementById('password').value;
+                 if(!email || password.length < 6){
+                     errorMessage.textContent = "Please enter a valid email and a password of at least 6 characters.";
+                     return;
+                 }
+                 studentData.email = email;
+                 studentData.password = password;
+            }
+            document.getElementById(`step${step - 1}`).style.display = 'none';
+            document.getElementById(`step${step}`).style.display = 'block';
+        }
 
-        // Step 2 Elements
-        const welcomeTitle = document.getElementById('welcome-title');
-        const goalChoices = document.querySelector('#step-goal .choices');
-
-        // Step 3 Elements
-        const classSelectionInfo = document.getElementById('class-selection-info');
-        const classSelectionTitle = document.getElementById('class-selection-title');
-        const classChoices = document.getElementById('class-choices');
-
-        // Step 4 Elements
-        const boardChoices = document.querySelector('#step-board .choices');
-
-        // --- State Management ---
-        let currentStep = 1;
-        const totalSteps = steps.length;
-        const userData = {
-            name: '',
-            goal: '',
-            class: '',
-            board: ''
-        };
-
-        // --- Functions ---
-        const updateProgressBar = () => {
-            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
-            progressBarFill.style.width = `${progress}%`;
-        };
-
-        const goToStep = (stepNumber) => {
-            currentStep = stepNumber;
-            steps.forEach((step, index) => {
-                step.classList.toggle('hidden', index + 1 !== currentStep);
+        let selectedClass = null;
+        document.querySelectorAll('.class-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.class-btn').forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                selectedClass = button.dataset.class;
             });
-            backBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-            updateProgressBar();
-        };
-
-        const populateClassButtons = (goal) => {
-            classChoices.innerHTML = ''; // Clear existing buttons
-            let classes = [];
-
-            if (goal === 'Class 6-10') {
-                classes = ['6th', '7th', '8th', '9th', '10th'];
-                classSelectionInfo.textContent = 'You selected, Class 6-10!';
-                classSelectionTitle.textContent = '36 medals won in International Olympiads';
-            } else if (goal === 'NEET' || goal === 'JEE') {
-                classes = ['11th', '12th'];
-                classSelectionInfo.textContent = `You selected, ${goal}!`;
-                classSelectionTitle.textContent = 'Select your class to proceed';
-            }
-
-            classes.forEach(cls => {
-                const button = document.createElement('button');
-                button.className = 'choice-btn';
-                button.textContent = cls;
-                button.dataset.class = cls;
-                classChoices.appendChild(button);
-            });
-        };
-
-        // --- Event Listeners ---
-
-        // Back Button
-        backBtn.addEventListener('click', () => {
-            if (currentStep > 1) {
-                goToStep(currentStep - 1);
-            }
         });
 
-        // Step 1: Name Input
-        studentNameInput.addEventListener('input', () => {
-            if (studentNameInput.value.trim() !== '') {
-                nameNextBtn.classList.replace('btn-secondary', 'btn-primary');
-            } else {
-                nameNextBtn.classList.replace('btn-primary', 'btn-secondary');
+        function submitSignup() {
+            if (!selectedClass) {
+                errorMessage.textContent = "Please select your class.";
+                return;
             }
-        });
+            studentData.class = selectedClass;
+            
+            // Create user with Firebase Auth
+            auth.createUserWithEmailAndPassword(studentData.email, studentData.password)
+                .then((userCredential) => {
+                    // Save additional data to Firestore
+                    const user = userCredential.user;
+                    return db.collection('users').doc(user.uid).set({
+                        name: studentData.name,
+                        email: studentData.email,
+                        class: studentData.class,
+                        role: 'student' // Assign role
+                    });
+                })
+                .then(() => {
+                    nextStep(4); // Show thank you screen
+                })
+                .catch((error) => {
+                    errorMessage.textContent = error.message;
+                });
+        }
+        
+        function goToDashboard() {
+            window.location.replace('3.html');
+        }
 
-        nameNextBtn.addEventListener('click', () => {
-            if (studentNameInput.value.trim() !== '') {
-                userData.name = studentNameInput.value.trim();
-                welcomeTitle.textContent = `Hi, ${userData.name}`;
-                goToStep(2);
-            }
-        });
-
-        // Step 2: Goal Selection
-        goalChoices.addEventListener('click', (e) => {
-            if (e.target.matches('.choice-btn')) {
-                userData.goal = e.target.dataset.goal;
-                populateClassButtons(userData.goal);
-                goToStep(3);
-            }
-        });
-
-        // Step 3: Class Selection
-        classChoices.addEventListener('click', (e) => {
-            if (e.target.matches('.choice-btn')) {
-                userData.class = e.target.dataset.class;
-                goToStep(4);
-            }
-        });
-
-        // Step 4: Board Selection
-        boardChoices.addEventListener('click', (e) => {
-            if (e.target.matches('.choice-btn')) {
-                userData.board = e.target.dataset.board;
-                goToStep(5);
-            }
-        });
-
-        // Step 5: Final Button
-        document.getElementById('finish-btn').addEventListener('click', () => {
-            console.log('Final User Data:', userData);
-            alert(`Welcome, ${userData.name}! Your setup is complete. Redirecting to dashboard...`);
-            // In a real application, you would redirect to a dashboard page.
-            // window.location.href = '/dashboard.html';
-        });
-
-        // --- Initial Setup ---
-        goToStep(1); // Start at the first step
     </script>
 </body>
 </html>
