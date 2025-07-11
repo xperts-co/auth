@@ -3,157 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Admin Dashboard</title>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; }
+        .hidden { display: none !important; }
+        .loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .admin-container { width: 90%; max-width: 800px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { margin: 0; }
+        #logout-btn { padding: 8px 15px; background-color: #ff3b30; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #user-list { list-style: none; padding: 0; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
+        .user-info span { display: block; color: #555; }
+        .user-info .user-name { font-weight: bold; color: #000; }
+        .approve-btn { padding: 8px 12px; background-color: #34c759; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div class="container" style="max-width: 800px; text-align: left;">
-        <div class="header">
-            <h1>Admin Panel</h1>
-            <button class="btn-secondary" onclick="logout()">Logout</button>
+    <div id="loader" class="loader"></div>
+    <div id="admin-container" class="admin-container hidden">
+        <div class="admin-header">
+            <h1>Pending Approvals</h1>
+            <button id="logout-btn">Logout</button>
         </div>
-
-        <div id="admin-content" style="display: none;">
-            <!-- Add Teacher -->
-            <div class="dashboard-card">
-                <h3>Add New Teacher</h3>
-                <form id="add-teacher-form">
-                    <input type="text" id="teacher-name" placeholder="Teacher Name" class="form-input" required>
-                    <input type="text" id="teacher-subject" placeholder="Subject" class="form-input" style="margin-top: 10px;" required>
-                    <input type="text" id="teacher-class" placeholder="Class (e.g., 9, 10)" class="form-input" style="margin-top: 10px;" required>
-                    <input type="tel" id="teacher-mobile" placeholder="Mobile Number" class="form-input" style="margin-top: 10px;" required>
-                    <input type="email" id="teacher-email" placeholder="Teacher Email (for login)" class="form-input" style="margin-top: 10px;" required>
-                    <input type="password" id="teacher-password" placeholder="Temporary Password" class="form-input" style="margin-top: 10px;" required>
-                    <button type="submit" class="btn" style="margin-top: 10px;">Add Teacher</button>
-                </form>
-            </div>
-
-            <!-- Manage Student Data -->
-            <div class="dashboard-card">
-                <h3>Manage Student Data</h3>
-                <div class="form-group">
-                    <label for="student-select">Select Student</label>
-                    <select id="student-select" class="form-input"></select>
-                </div>
-                
-                <!-- Add Attendance -->
-                <h4>Add Attendance</h4>
-                <form id="add-attendance-form" style="display: flex; gap: 10px; align-items:center;">
-                    <input type="date" id="attendance-date" class="form-input" required>
-                    <select id="attendance-status" class="form-input" required>
-                        <option value="present">Present</option>
-                        <option value="absent">Absent</option>
-                    </select>
-                    <button type="submit" class="btn">Save</button>
-                </form>
-
-                <!-- Add Test Marks -->
-                <h4 style="margin-top: 1.5rem;">Add Test Marks</h4>
-                 <form id="add-marks-form" style="display: flex; gap: 10px; align-items:center;">
-                    <input type="text" id="test-name" placeholder="Test Name (e.g., Weekly Test 1)" class="form-input" required>
-                    <input type="number" id="marks-obtained" placeholder="Marks" class="form-input" required>
-                    <input type="number" id="total-marks" placeholder="Total" class="form-input" required>
-                    <button type="submit" class="btn">Save</button>
-                </form>
-            </div>
-             <p id="admin-message" style="color: green;"></p>
-        </div>
-        <p id="loading-message">Verifying access...</p>
+        <ul id="user-list">
+            <!-- Pending users will be populated here -->
+        </ul>
     </div>
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
-    
-    <!-- Local Scripts -->
-    <script src="app.js"></script>
-    <script>
-        const adminContent = document.getElementById('admin-content');
-        const loadingMessage = document.getElementById('loading-message');
-        const studentSelect = document.getElementById('student-select');
-        const adminMessage = document.getElementById('admin-message');
 
-        auth.onAuthStateChanged(user => {
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g",
+            authDomain: "custom-practice-xperts.firebaseapp.com",
+            projectId: "custom-practice-xperts",
+            storageBucket: "custom-practice-xperts.appspot.com",
+            messagingSenderId: "348008678781",
+            appId: "1:348008678781:web:a57738e0b878b4b8d97814",
+            measurementId: "G-D5V8DPLK6F"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const loader = document.getElementById('loader');
+        const adminContainer = document.getElementById('admin-container');
+        const userList = document.getElementById('user-list');
+
+        // Security Check: Ensure only admins can access this page
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                db.collection('users').doc(user.uid).get().then(doc => {
-                    if (doc.exists && doc.data().role === 'admin') {
-                        loadingMessage.style.display = 'none';
-                        adminContent.style.display = 'block';
-                        loadStudents();
-                    } else {
-                        alert("Access Denied. You are not an admin.");
-                        window.location.replace('1.html');
-                    }
-                });
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists && userDoc.data().role === 'admin') {
+                    // User is an admin, show the page and fetch data
+                    loader.classList.add('hidden');
+                    adminContainer.classList.remove('hidden');
+                    fetchPendingUsers();
+                } else {
+                    // Not an admin, log out and redirect
+                    alert("Access denied.");
+                    auth.signOut();
+                    window.location.replace('1.html');
+                }
             } else {
+                // Not logged in, redirect
                 window.location.replace('1.html');
             }
         });
-        
-        function showAdminMessage(msg) {
-            adminMessage.textContent = msg;
-            setTimeout(() => adminMessage.textContent = '', 3000);
-        }
 
-        function loadStudents() {
-            db.collection('users').where('role', '==', 'student').get().then(snapshot => {
-                studentSelect.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const student = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${student.name} - Class ${student.class}`;
-                    studentSelect.appendChild(option);
+        async function fetchPendingUsers() {
+            userList.innerHTML = ''; // Clear list
+            try {
+                const querySnapshot = await db.collection('users').where('isApproved', '==', false).get();
+                if(querySnapshot.empty) {
+                    userList.innerHTML = '<li>No pending approvals.</li>';
+                    return;
+                }
+                querySnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'user-item';
+                    li.id = `user-${doc.id}`;
+                    li.innerHTML = `
+                        <div class="user-info">
+                            <span class="user-name">${userData.name}</span>
+                            <span>Goal: ${userData.goal} | Class: ${userData.class}</span>
+                        </div>
+                        <button class="approve-btn" data-uid="${doc.id}">Approve</button>
+                    `;
+                    userList.appendChild(li);
                 });
-            });
+            } catch (error) {
+                console.error("Error fetching pending users:", error);
+                userList.innerHTML = '<li>Error loading users.</li>';
+            }
         }
-
-        // Add Teacher Logic (Note: This creates a new auth user, which is complex. For a real app, use Firebase Admin SDK on a server)
-        document.getElementById('add-teacher-form').addEventListener('submit', e => {
-            e.preventDefault();
-            // This is a simplified client-side approach. In production, this logic should be on a secure server.
-            showAdminMessage('Teacher creation is a complex feature requiring a server-side environment (Firebase Functions) to be secure. This is a UI demonstration.');
-             // Logic to add to Firestore would go here, but creating a new auth user from the client is a security risk.
-            e.target.reset();
+        
+        userList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('approve-btn')) {
+                const uid = e.target.dataset.uid;
+                e.target.disabled = true;
+                e.target.textContent = 'Approving...';
+                
+                try {
+                    await db.collection('users').doc(uid).update({ isApproved: true });
+                    // Remove the item from the list for immediate feedback
+                    document.getElementById(`user-${uid}`).remove();
+                    if(userList.children.length === 0) {
+                         userList.innerHTML = '<li>No pending approvals.</li>';
+                    }
+                } catch (error) {
+                    console.error("Error approving user:", error);
+                    alert("Failed to approve user.");
+                    e.target.disabled = false;
+                    e.target.textContent = 'Approve';
+                }
+            }
         });
 
-        // Add Attendance
-        document.getElementById('add-attendance-form').addEventListener('submit', e => {
-            e.preventDefault();
-            const studentId = studentSelect.value;
-            const date = document.getElementById('attendance-date').value;
-            const status = document.getElementById('attendance-status').value;
-            
-            db.collection('attendance').add({
-                studentId,
-                date,
-                status,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                showAdminMessage('Attendance saved successfully!');
-                e.target.reset();
-            }).catch(err => showAdminMessage(`Error: ${err.message}`));
-        });
-
-        // Add Marks
-        document.getElementById('add-marks-form').addEventListener('submit', e => {
-            e.preventDefault();
-            const studentId = studentSelect.value;
-            const testName = document.getElementById('test-name').value;
-            const marksObtained = document.getElementById('marks-obtained').value;
-            const totalMarks = document.getElementById('total-marks').value;
-
-            db.collection('tests').add({
-                studentId,
-                testName,
-                marksObtained: parseInt(marksObtained),
-                totalMarks: parseInt(totalMarks),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                showAdminMessage('Marks saved successfully!');
-                e.target.reset();
-            }).catch(err => showAdminMessage(`Error: ${err.message}`));
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = '1.html';
+            });
         });
     </script>
 </body>
