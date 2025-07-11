@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-blue: #0d6efd;
+    --light-bg: #f8f9fe;
+    --dark-text: #333;
+    --light-text: #6c757d;
+    --border-color: #dee2e6;
+    --white: #fff;
+    --green: #198754;
+    --danger: #dc3545;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+    padding: 2rem;
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    margin: 1rem;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    color: var(--dark-text);
+}
+
+.back-arrow {
+    font-size: 1.5rem;
+    color: var(--dark-text);
+    text-decoration: none;
+}
+
+/* Illustrations */
+.illustration {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1.5rem auto;
+    /* background-color: #eee; In case you want to add SVGs */
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+/* Buttons */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-blue);
+    color: var(--white);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-secondary {
+    background-color: var(--light-text);
+}
+.btn-secondary:hover {
+    background-color: #5c636a;
+}
+
+/* Text & Links */
+h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+.link {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: 1rem;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    color: var(--danger);
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Dashboard Specifics */
+.dashboard-card {
+    background-color: var(--light-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+.dashboard-card h3 {
+    margin-bottom: 0.75rem;
+}
+.dashboard-card p {
+    margin-bottom: 0.5rem;
+}
+
+.logout-btn {
+    margin-top: 1.5rem;
+    background-color: var(--danger);
+}
+.logout-btn:hover {
+    background-color: #bb2d3b;
+}
+
+/* Class Selector */
+.class-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.class-btn {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--white);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.class-btn.selected {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    border-color: var(--primary-blue);
+}
