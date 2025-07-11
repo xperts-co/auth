@@ -6,34 +6,28 @@
     <title>Welcome to ALLEN</title>
     <style>
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #1c1c1e; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .container { background-color: #ffffff; width: 100%; max-width: 450px; min-height: 100vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; /* Important for animations */ }
+        .container { background-color: #ffffff; width: 100%; max-width: 450px; min-height: 100vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
         .header { padding: 16px; display: flex; align-items: center; gap: 10px; }
         .back-btn { background: #f0f2f5; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; color: #333; }
         .progress-bar-container { flex-grow: 1; height: 8px; background-color: #e0e6ed; border-radius: 4px; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background-color: #007aff; border-radius: 4px; transition: width 0.4s ease-in-out; }
         
-        /* Animation Styles */
-        .form-container { position: relative; flex-grow: 1; padding: 40px 24px 24px 24px; }
+        .form-wrapper { position: relative; flex-grow: 1; padding: 40px 24px 24px 24px; }
         .step {
-            position: absolute;
-            top: 40px; left: 24px; right: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            position: absolute;
+            width: calc(100% - 48px); /* Full width minus padding */
             opacity: 0;
+            transform: translateX(100%);
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
             pointer-events: none;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
-        .step.active {
-            opacity: 1;
-            transform: translateX(0);
-            pointer-events: auto;
-            position: relative; /* Take up space in the flow */
-            top: 0; left: 0; right: 0;
-        }
-        .step.entering { transform: translateX(50px); }
-        .step.exiting { transform: translateX(-50px); }
+        .step.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+        .step.exiting { transform: translateX(-100%); opacity: 0; }
+        .step:first-child.active { position: relative; } /* Allow first step to define container height */
 
         .step-image { width: 100px; height: 100px; margin-bottom: 40px; }
         .step-image.large { width: 150px; height: 150px; }
@@ -44,7 +38,7 @@
         .next-btn, .choice-btn { width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; border: 1px solid #c8c8c8; background-color: #f9f9f9; color: #333; }
         .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
         .primary-btn { width: 100%; padding: 16px; background-color: #007aff; color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; margin-top: 20px; }
-        .primary-btn:disabled { background-color: #a0caff; cursor: not-allowed; }
+        .primary-btn:disabled { background-color: #e0e0e0; color: #a0a0a0; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -55,16 +49,16 @@
                 <div id="progress-bar" class="progress-bar"></div>
             </div>
         </div>
-        <div id="form-container" class="form-container">
-            <!-- Step 1: Name & Password -->
-            <div id="step-1" class="step active entering">
+        <div id="form-wrapper" class="form-wrapper">
+            <!-- Step 1: Name, Mobile, Password -->
+            <div id="step-1" class="step active">
                 <img src="https://i.imgur.com/uG9nQ2W.png" alt="Icon" class="step-image">
                 <h1>Join the ALLEN family!</h1>
                 <p>Let's start with your details.</p>
-                <input type="text" id="student-name" placeholder="Student's full name">
-                <input type="text" id="mobile-number" placeholder="10-digit Mobile Number" disabled>
-                <input type="password" id="password" placeholder="Create a password (min. 6 chars)">
-                <button id="next-to-step-2" class="next-btn">Next</button>
+                <input type="text" id="student-name" placeholder="Student's full name" required>
+                <input type="tel" id="mobile-number" placeholder="10-digit Mobile Number" required maxlength="10">
+                <input type="password" id="password" placeholder="Create a password (min. 6 chars)" required>
+                <button id="next-to-step-2" class="primary-btn" disabled>Next</button>
             </div>
             <!-- Step 2: Goal -->
             <div id="step-2" class="step">
@@ -119,34 +113,12 @@
         const totalSteps = 5;
         const userData = { name: '', mobile: '', password: '', goal: '', class: '', board: '', isApproved: false, role: 'student' };
 
+        // DOM Elements
         const progressBar = document.getElementById('progress-bar');
         const backBtn = document.getElementById('back-btn');
-        const formContainer = document.getElementById('form-container');
-
-        window.onload = () => {
-            const params = new URLSearchParams(window.location.search);
-            const mobile = params.get('mobile');
-            if (mobile && /^\d{10}$/.test(mobile)) {
-                userData.mobile = mobile;
-                document.getElementById('mobile-number').value = mobile;
-            } else if (!params.has('mobile')) {
-                const newMobile = prompt("Please enter your 10-digit mobile number to sign up:");
-                if (newMobile && /^\d{10}$/.test(newMobile)) {
-                     userData.mobile = newMobile;
-                     document.getElementById('mobile-number').value = newMobile;
-                } else {
-                    alert("A valid mobile number is required to sign up.");
-                    window.location.href = '1.html';
-                }
-            }
-            else {
-                alert("Invalid mobile number. Redirecting to login page.");
-                window.location.href = '1.html';
-            }
-            // Trigger initial animation
-            setTimeout(() => document.getElementById('step-1').classList.remove('entering'), 10);
-            updateProgressBar();
-        };
+        const formWrapper = document.getElementById('form-wrapper');
+        const step1Inputs = ['student-name', 'mobile-number', 'password'].map(id => document.getElementById(id));
+        const nextBtnStep1 = document.getElementById('next-to-step-2');
 
         function updateProgressBar() {
             const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
@@ -158,22 +130,40 @@
             const nextStepEl = document.getElementById(`step-${nextStep}`);
             if (!currentStepEl || !nextStepEl) return;
 
-            // Animate out the current step
+            const isMovingBack = nextStep < currentStep;
+
             currentStepEl.classList.remove('active');
             currentStepEl.classList.add('exiting');
+            if (isMovingBack) {
+                nextStepEl.style.transform = 'translateX(-100%)';
+            }
             
-            // Animate in the next step
-            nextStepEl.classList.add('active', 'entering');
-            
-            // Clean up animation classes after they finish
+            nextStepEl.classList.add('active');
+
+            // Force a reflow to apply the initial transform before transitioning
+            getComputedStyle(nextStepEl).transform;
+
+            if (isMovingBack) {
+                nextStepEl.style.transform = 'translateX(0)';
+            }
+
             setTimeout(() => {
                 currentStepEl.classList.remove('exiting');
-                nextStepEl.classList.remove('entering');
-            }, 300); // Must match CSS transition duration
+                // Remove the inline style after animation completes
+                nextStepEl.style.transform = ''; 
+            }, 400);
 
             currentStep = nextStep;
             updateProgressBar();
             backBtn.style.visibility = (currentStep > 1 && currentStep < totalSteps) ? 'visible' : 'hidden';
+        }
+
+        function validateStep1() {
+            const [name, mobile, password] = step1Inputs.map(input => input.value.trim());
+            const isNameValid = name.length > 1;
+            const isMobileValid = /^\d{10}$/.test(mobile);
+            const isPasswordValid = password.length >= 6;
+            nextBtnStep1.disabled = !(isNameValid && isMobileValid && isPasswordValid);
         }
 
         function generateClassButtons(goal) {
@@ -196,29 +186,48 @@
                 const profileData = { ...userData };
                 delete profileData.password;
                 await db.collection('users').doc(userCredential.user.uid).set(profileData);
-                alert("Account created! Please wait for admin approval. You will be redirected to the login page.");
+                alert("Account created successfully! You will be redirected to the login page. Please log in after an admin approves your account.");
                 window.location.href = '1.html';
             } catch (error) {
-                alert(`Error: ${error.message}`);
-                goToStep(1);
+                alert(`Error creating account: ${error.message}`);
+                goToStep(1); // Go back to first step on error
             }
         }
 
-        // Event Listeners
-        document.getElementById('next-to-step-2').addEventListener('click', () => {
-            const name = document.getElementById('student-name').value.trim();
-            const password = document.getElementById('password').value;
-            if (name.length < 2 || password.length < 6) {
-                alert('Please enter a valid name and a password of at least 6 characters.');
-                return;
+        // --- Event Listeners ---
+        step1Inputs.forEach(input => input.addEventListener('input', validateStep1));
+
+        nextBtnStep1.addEventListener('click', async () => {
+            const [name, mobile, password] = step1Inputs.map(input => input.value.trim());
+            const email = `${mobile}@${auth.app.options.authDomain}`;
+            
+            nextBtnStep1.textContent = 'Checking...';
+            nextBtnStep1.disabled = true;
+
+            try {
+                const methods = await auth.fetchSignInMethodsForEmail(email);
+                if (methods.length > 0) {
+                    alert('This mobile number is already registered. Please proceed to login.');
+                    window.location.href = '1.html';
+                    return;
+                }
+
+                // If user does not exist, proceed
+                userData.name = name;
+                userData.mobile = mobile;
+                userData.password = password;
+                document.getElementById('greeting-text').textContent = `Hi, ${name}`;
+                goToStep(2);
+                
+            } catch (error) {
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                nextBtnStep1.textContent = 'Next';
+                validateStep1(); // Re-evaluate button state
             }
-            userData.name = name;
-            userData.password = password;
-            document.getElementById('greeting-text').textContent = `Hi, ${name}`;
-            goToStep(2);
         });
         
-        formContainer.addEventListener('click', (e) => {
+        formWrapper.addEventListener('click', (e) => {
             const target = e.target;
             if (target.matches('#step-2 .choice-btn')) {
                 userData.goal = target.dataset.goal;
