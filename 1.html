@@ -67,6 +67,23 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // --- NEW: Redirection mapping based on user's class and goal ---
+        const redirectMap = {
+            "6th": "https://apple.com",
+            "7th": "https://a.com",
+            "8th": "https://b.com",
+            "9th": "https://c.com",
+            "10th": "https://d.com",
+            "11th": {
+                "NEET": "https://dc.com",
+                "JEE": "https://k.com"
+            },
+            "12th": {
+                "NEET": "https://n.com",
+                "JEE": "https://m.com"
+            }
+        };
+
         const loader = document.getElementById('loader');
         const loginContainer = document.getElementById('login-container');
         const loginForm = document.getElementById('loginForm');
@@ -89,18 +106,36 @@
         async function checkUserStatusAndRedirect(uid) {
             try {
                 const userDoc = await db.collection('users').doc(uid).get();
-                if (!userDoc.exists) { // User in Auth, but not Firestore (e.g., interrupted signup)
+                if (!userDoc.exists) {
                     throw new Error("User profile not found. Please sign up again.");
                 }
                 const userData = userDoc.data();
-                if (userData.role === 'admin') window.location.replace('4.html');
-                else if (userData.isApproved) window.location.replace('3.html');
-                else {
-                    // This is the key state: user exists but is not approved.
+
+                if (userData.role === 'admin') {
+                    window.location.replace('4.html'); // Admin goes to admin page
+                } else if (userData.isApproved) {
+                    // --- MODIFIED LOGIC STARTS HERE ---
+                    const userClass = userData.class;
+                    const userGoal = userData.goal;
+                    const target = redirectMap[userClass];
+
+                    if (typeof target === 'string') {
+                        // Simple redirect for classes 6-10
+                        window.location.replace(target);
+                    } else if (typeof target === 'object' && target !== null && target[userGoal]) {
+                        // Nested redirect for classes 11/12 based on goal
+                        window.location.replace(target[userGoal]);
+                    } else {
+                        // Fallback: If no rule matches, send to the generic profile page
+                        console.warn(`No redirect rule for class "${userClass}" & goal "${userGoal}". Falling back.`);
+                        window.location.replace('3.html');
+                    }
+                    // --- MODIFIED LOGIC ENDS HERE ---
+                } else {
                     errorMessageDiv.textContent = "Your account is pending admin approval. Please check back later.";
                     loader.classList.add('hidden');
                     loginContainer.classList.remove('hidden');
-                    auth.signOut(); // Log them out so they don't get stuck.
+                    auth.signOut();
                 }
             } catch (error) {
                 auth.signOut();
@@ -142,7 +177,7 @@
                 } else {
                     submitBtn.textContent = 'Logging in...';
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    // Let the onAuthStateChanged handler do the redirection
+                    // The onAuthStateChanged handler will now manage the redirection.
                 }
             } catch (error) {
                 errorMessageDiv.textContent = error.code === 'auth/wrong-password' ? 'Incorrect email or password.' : `Login failed: ${error.message}`;
