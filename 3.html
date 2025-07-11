@@ -3,108 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>My Profile</title>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .hidden { display: none !important; }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .profile-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        .profile-card h1 { margin-top: 0; color: #333; }
+        .profile-card p { color: #555; font-size: 1.1em; }
+        .profile-card .label { font-weight: bold; color: #007aff; }
+        #logout-btn { margin-top: 20px; padding: 10px 20px; background-color: #ff3b30; color: white; border: none; border-radius: 8px; font-size: 1em; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
-        <div class="header">
-            <h1 id="welcome-message">Welcome, Student!</h1>
-        </div>
-
-        <div class="dashboard-card">
-            <h3>My Details</h3>
-            <p><strong>Class:</strong> <span id="student-class"></span></p>
-            <p><strong>Email:</strong> <span id="student-email"></span></p>
-        </div>
-
-        <div class="dashboard-card">
-            <h3>My Attendance</h3>
-            <p id="attendance-info">Loading...</p>
-        </div>
-
-        <div class="dashboard-card">
-            <h3>My Test Marks</h3>
-            <div id="test-marks-info">Loading...</div>
-        </div>
-        
-        <div class="dashboard-card">
-            <h3>Class Resources</h3>
-            <div id="resource-links">Loading...</div>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">Logout</button>
+    <div id="loader" class="loader"></div>
+    <div id="profile-container" class="profile-card hidden">
+        <h1>Welcome, <span id="user-name"></span>!</h1>
+        <p><span class="label">Goal:</span> <span id="user-goal"></span></p>
+        <p><span class="label">Class:</span> <span id="user-class"></span></p>
+        <p><span class="label">Board:</span> <span id="user-board"></span></p>
+        <p><span class="label">Mobile:</span> <span id="user-mobile"></span></p>
+        <button id="logout-btn">Logout</button>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
-    
-    <!-- Local Scripts -->
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
-        auth.onAuthStateChanged(user => {
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g",
+            authDomain: "custom-practice-xperts.firebaseapp.com",
+            projectId: "custom-practice-xperts",
+            storageBucket: "custom-practice-xperts.appspot.com",
+            messagingSenderId: "348008678781",
+            appId: "1:348008678781:web:a57738e0b878b4b8d97814",
+            measurementId: "G-D5V8DPLK6F"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const loader = document.getElementById('loader');
+        const profileContainer = document.getElementById('profile-container');
+
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                const uid = user.uid;
-                const userRef = db.collection('users').doc(uid);
-
-                // Fetch user data
-                userRef.get().then(doc => {
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        document.getElementById('welcome-message').textContent = `Welcome, ${userData.name}!`;
-                        document.getElementById('student-class').textContent = userData.class;
-                        document.getElementById('student-email').textContent = userData.email;
-                        
-                        // Load resources from data.js
-                        const resources = resourceLinks[userData.class];
-                        const linksContainer = document.getElementById('resource-links');
-                        if(resources){
-                            let linksHtml = '';
-                            for (const subject in resources) {
-                                linksHtml += `<a href="${resources[subject]}" target="_blank" class="link">${subject} Materials</a><br>`;
-                            }
-                            linksContainer.innerHTML = linksHtml;
+                // User is signed in, fetch their profile data
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        // Security check: ensure user is approved and not an admin
+                        if (userData.isApproved && userData.role !== 'admin') {
+                            document.getElementById('user-name').textContent = userData.name;
+                            document.getElementById('user-goal').textContent = userData.goal;
+                            document.getElementById('user-class').textContent = userData.class;
+                            document.getElementById('user-board').textContent = userData.board;
+                            document.getElementById('user-mobile').textContent = userData.mobile;
+                            
+                            loader.classList.add('hidden');
+                            profileContainer.classList.remove('hidden');
                         } else {
-                            linksContainer.innerHTML = 'No resources found for your class.';
+                            // User is not approved or is an admin, they don't belong here
+                            auth.signOut();
+                            window.location.replace('1.html');
                         }
+                    } else {
+                         // Profile doesn't exist
+                        auth.signOut();
+                        window.location.replace('1.html');
                     }
-                });
-
-                // Fetch attendance
-                db.collection('attendance').where('studentId', '==', uid).get().then(snapshot => {
-                    if (snapshot.empty) {
-                        document.getElementById('attendance-info').textContent = 'No attendance records found.';
-                        return;
-                    }
-                    let present = 0;
-                    let total = snapshot.size;
-                    snapshot.forEach(doc => {
-                        if (doc.data().status === 'present') present++;
-                    });
-                    document.getElementById('attendance-info').textContent = `Present on ${present} out of ${total} days. (${((present/total)*100).toFixed(1)}%)`;
-                });
-
-                // Fetch test marks
-                db.collection('tests').where('studentId', '==', uid).get().then(snapshot => {
-                     const marksContainer = document.getElementById('test-marks-info');
-                    if (snapshot.empty) {
-                        marksContainer.textContent = 'No test records found.';
-                        return;
-                    }
-                    let marksHtml = '';
-                    snapshot.forEach(doc => {
-                        const test = doc.data();
-                        marksHtml += `<p><strong>${test.testName}:</strong> ${test.marksObtained} / ${test.totalMarks}</p>`;
-                    });
-                    marksContainer.innerHTML = marksHtml;
-                });
-
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    auth.signOut();
+                    window.location.replace('1.html');
+                }
             } else {
+                // No user is signed in, redirect to login
                 window.location.replace('1.html');
             }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = '1.html';
+            });
         });
     </script>
 </body>
