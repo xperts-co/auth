@@ -6,14 +6,35 @@
     <title>Welcome to ALLEN</title>
     <style>
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #1c1c1e; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .container { background-color: #ffffff; width: 100%; max-width: 450px; min-height: 100vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .container { background-color: #ffffff; width: 100%; max-width: 450px; min-height: 100vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; /* Important for animations */ }
         .header { padding: 16px; display: flex; align-items: center; gap: 10px; }
         .back-btn { background: #f0f2f5; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; color: #333; }
         .progress-bar-container { flex-grow: 1; height: 8px; background-color: #e0e6ed; border-radius: 4px; overflow: hidden; }
         .progress-bar { width: 0%; height: 100%; background-color: #007aff; border-radius: 4px; transition: width 0.4s ease-in-out; }
-        .form-container { flex-grow: 1; padding: 24px; padding-top: 40px; }
-        .step { display: none; flex-direction: column; align-items: center; text-align: center; }
-        .step.active { display: flex; }
+        
+        /* Animation Styles */
+        .form-container { position: relative; flex-grow: 1; padding: 40px 24px 24px 24px; }
+        .step {
+            position: absolute;
+            top: 40px; left: 24px; right: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .step.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+            position: relative; /* Take up space in the flow */
+            top: 0; left: 0; right: 0;
+        }
+        .step.entering { transform: translateX(50px); }
+        .step.exiting { transform: translateX(-50px); }
+
         .step-image { width: 100px; height: 100px; margin-bottom: 40px; }
         .step-image.large { width: 150px; height: 150px; }
         h1 { font-size: 22px; font-weight: 600; margin: 0 0 10px 0; }
@@ -21,7 +42,6 @@
         .highlight-text { color: #34c759; font-size: 24px; margin-top: 5px; }
         input { width: 100%; padding: 16px; border: 1px solid #c8c8c8; border-radius: 8px; font-size: 16px; box-sizing: border-box; text-align: center; margin-bottom: 15px; }
         .next-btn, .choice-btn { width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; border: 1px solid #c8c8c8; background-color: #f9f9f9; color: #333; }
-        .next-btn { background-color: #f0f0f0; color: #888; }
         .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
         .primary-btn { width: 100%; padding: 16px; background-color: #007aff; color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; margin-top: 20px; }
         .primary-btn:disabled { background-color: #a0caff; cursor: not-allowed; }
@@ -37,7 +57,7 @@
         </div>
         <div id="form-container" class="form-container">
             <!-- Step 1: Name & Password -->
-            <div id="step-1" class="step active">
+            <div id="step-1" class="step active entering">
                 <img src="https://i.imgur.com/uG9nQ2W.png" alt="Icon" class="step-image">
                 <h1>Join the ALLEN family!</h1>
                 <p>Let's start with your details.</p>
@@ -61,14 +81,14 @@
             <div id="step-3" class="step">
                 <img src="https://i.imgur.com/7Lz6YgE.png" alt="Icon" class="step-image">
                 <p>You selected, <span id="selected-goal-text"></span>!</p>
-                <h1>36 medals won in International Olympiads</h1>
+                <h1 class="highlight-text">36 medals won in International Olympiads</h1>
                 <div id="class-selection-group" class="button-group"></div>
             </div>
             <!-- Step 4: Board -->
             <div id="step-4" class="step">
                 <img src="https://i.imgur.com/7Lz6YgE.png" alt="Icon" class="step-image">
                 <p>You selected, <span id="selected-goal-text-2"></span>!</p>
-                <h1>Select your board</h1>
+                <h1 class="highlight-text">Select your board</h1>
                 <div id="board-selection-group" class="button-group">
                     <button class="choice-btn" data-board="CBSE">CBSE</button>
                     <button class="choice-btn" data-board="State Board">State Board</button>
@@ -90,47 +110,41 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g",
-            authDomain: "custom-practice-xperts.firebaseapp.com",
-            projectId: "custom-practice-xperts",
-            storageBucket: "custom-practice-xperts.appspot.com",
-            messagingSenderId: "348008678781",
-            appId: "1:348008678781:web:a57738e0b878b4b8d97814",
-            measurementId: "G-D5V8DPLK6F"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g", authDomain: "custom-practice-xperts.firebaseapp.com", projectId: "custom-practice-xperts", storageBucket: "custom-practice-xperts.appspot.com", messagingSenderId: "348008678781", appId: "1:348008678781:web:a57738e0b878b4b8d97814", measurementId: "G-D5V8DPLK6F" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         let currentStep = 1;
         const totalSteps = 5;
-        const userData = {
-            name: '',
-            mobile: '',
-            password: '',
-            goal: '',
-            class: '',
-            board: '',
-            isApproved: false, // CRITICAL: Default to not approved
-            role: 'student' // Default role
-        };
+        const userData = { name: '', mobile: '', password: '', goal: '', class: '', board: '', isApproved: false, role: 'student' };
 
         const progressBar = document.getElementById('progress-bar');
         const backBtn = document.getElementById('back-btn');
         const formContainer = document.getElementById('form-container');
 
-        // Get mobile from URL
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const mobile = params.get('mobile');
             if (mobile && /^\d{10}$/.test(mobile)) {
                 userData.mobile = mobile;
                 document.getElementById('mobile-number').value = mobile;
-            } else {
-                alert("Invalid or missing mobile number. Please start from the login page.");
+            } else if (!params.has('mobile')) {
+                const newMobile = prompt("Please enter your 10-digit mobile number to sign up:");
+                if (newMobile && /^\d{10}$/.test(newMobile)) {
+                     userData.mobile = newMobile;
+                     document.getElementById('mobile-number').value = newMobile;
+                } else {
+                    alert("A valid mobile number is required to sign up.");
+                    window.location.href = '1.html';
+                }
+            }
+            else {
+                alert("Invalid mobile number. Redirecting to login page.");
                 window.location.href = '1.html';
             }
+            // Trigger initial animation
+            setTimeout(() => document.getElementById('step-1').classList.remove('entering'), 10);
             updateProgressBar();
         };
 
@@ -139,11 +153,25 @@
             progressBar.style.width = `${progress}%`;
         }
 
-        function goToStep(step) {
-            if (step < 1 || step > totalSteps) return;
-            document.getElementById(`step-${currentStep}`).classList.remove('active');
-            currentStep = step;
-            document.getElementById(`step-${currentStep}`).classList.add('active');
+        function goToStep(nextStep) {
+            const currentStepEl = document.getElementById(`step-${currentStep}`);
+            const nextStepEl = document.getElementById(`step-${nextStep}`);
+            if (!currentStepEl || !nextStepEl) return;
+
+            // Animate out the current step
+            currentStepEl.classList.remove('active');
+            currentStepEl.classList.add('exiting');
+            
+            // Animate in the next step
+            nextStepEl.classList.add('active', 'entering');
+            
+            // Clean up animation classes after they finish
+            setTimeout(() => {
+                currentStepEl.classList.remove('exiting');
+                nextStepEl.classList.remove('entering');
+            }, 300); // Must match CSS transition duration
+
+            currentStep = nextStep;
             updateProgressBar();
             backBtn.style.visibility = (currentStep > 1 && currentStep < totalSteps) ? 'visible' : 'hidden';
         }
@@ -164,23 +192,15 @@
         async function createAndSaveUser() {
             const email = `${userData.mobile}@${auth.app.options.authDomain}`;
             try {
-                // 1. Create user in Firebase Auth
                 const userCredential = await auth.createUserWithEmailAndPassword(email, userData.password);
-                const uid = userCredential.user.uid;
-
-                // 2. Save user profile data to Firestore
                 const profileData = { ...userData };
-                delete profileData.password; // Do NOT save password in Firestore
-                await db.collection('users').doc(uid).set(profileData);
-
-                // 3. Inform user and redirect
-                alert("Account created successfully! Please wait for admin approval. You will be redirected to the login page.");
+                delete profileData.password;
+                await db.collection('users').doc(userCredential.user.uid).set(profileData);
+                alert("Account created! Please wait for admin approval. You will be redirected to the login page.");
                 window.location.href = '1.html';
-
             } catch (error) {
-                console.error("Error creating user:", error);
                 alert(`Error: ${error.message}`);
-                goToStep(1); // Go back to the first step on error
+                goToStep(1);
             }
         }
 
@@ -212,7 +232,7 @@
             } else if (target.matches('#step-4 .choice-btn')) {
                 userData.board = target.dataset.board;
                 goToStep(5);
-                createAndSaveUser(); // Final step triggers user creation
+                createAndSaveUser();
             }
         });
 
