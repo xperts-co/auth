@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ALLEN</title>
+    <style>
+        /* Basic Reset and Font */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8; /* Light blueish-grey background from image */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main container to mimic a mobile screen */
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background-color: #f0f4f8;
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header section with back arrow and logo */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-arrow {
+            font-size: 24px;
+            text-decoration: none;
+            color: #333;
+            margin-right: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4A4A4A;
+            letter-spacing: 1px;
+        }
+
+        /* Page title */
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        /* Form element styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #dcdcdc;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        
+        .input-field::placeholder {
+            color: #aaa;
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Add padding to the right of password input for the icon */
+        #password {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #555;
+        }
+        
+        /* "Forgot password?" link */
+        .forgot-password {
+            display: inline-block;
+            margin-top: 5px;
+            margin-bottom: 30px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        /* Button styling */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            color: #6d6d6d;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #d0d0d0;
+        }
+        
+        /* Footer section */
+        .footer {
+            margin-top: auto; /* Pushes footer to the bottom */
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            padding-top: 20px;
+        }
+        
+        .footer a {
+            color: #333;
+            font-weight: 500;
+            text-decoration: underline;
+        }
+
+        /* Utility class to hide elements */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="#" class="back-arrow">←</a>
+            <span class="logo">ALLEN</span>
+        </div>
+
+        <!-- Title -->
+        <h1 class="title">Login with Mobile Number</h1>
+
+        <!-- Login Form -->
+        <form id="login-form">
+            <!-- STEP 1: Mobile Number Input -->
+            <div id="mobile-step">
+                <div class="form-group">
+                    <input type="tel" id="mobile" class="input-field" placeholder="Mobile Number" maxlength="10" required>
+                </div>
+                <button type="button" id="continue-btn" class="btn">Continue</button>
+            </div>
+
+            <!-- STEP 2: Password Input (Initially Hidden) -->
+            <div id="password-step" class="hidden">
+                <div class="form-group">
+                    <div class="password-wrapper">
+                       <input type="password" id="password" class="input-field" placeholder="Password" required>
+                       <!-- Password visibility toggle icon -->
+                       <span class="toggle-password" id="toggle-password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 0-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"/>
+                                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"/>
+                            </svg>
+                       </span>
+                    </div>
+                </div>
+                <a href="#" class="forgot-password">Forgot password?</a>
+                <button type="submit" class="btn">Login</button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="footer">
+            Having trouble? Write us at <a href="mailto:wecare@allen.in">wecare@allen.in</a>
+        </div>
+    </div>
+
+    <script>
+        // Get references to all the necessary elements
+        const mobileStep = document.getElementById('mobile-step');
+        const passwordStep = document.getElementById('password-step');
+        const mobileInput = document.getElementById('mobile');
+        const continueBtn = document.getElementById('continue-btn');
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('toggle-password');
+
+        // --- Event Listener for the 'Continue' button ---
+        continueBtn.addEventListener('click', () => {
+            // Simple validation: Check if it's a 10-digit number
+            if (mobileInput.value.length === 10 && /^\d+$/.test(mobileInput.value)) {
+                // In a real app, you would call an API to check if the number is registered.
+                // For this example, we'll just proceed to the next step.
+                
+                // Hide the mobile input section and show the password section
+                mobileStep.classList.add('hidden'); 
+                passwordStep.classList.remove('hidden'); 
+            } else {
+                alert('Please enter a valid 10-digit mobile number.');
+            }
+        });
+
+        // --- Event Listener for the final 'Login' button ---
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent the form from reloading the page
+            
+            if (passwordInput.value) {
+                // In a real app, you would verify the password via an API call.
+                console.log('Login successful! Redirecting...');
+                alert('Login successful! You will be redirected.');
+
+                // Redirect to 2.html as requested
+                window.location.href = '2.html';
+            } else {
+                alert('Password cannot be empty.');
+            }
+        });
+
+        // --- Event Listener for the password visibility toggle ---
+        togglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+
+            // Change the icon based on visibility
+            togglePassword.innerHTML = isPassword 
+                ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>` // Eye icon
+                : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 0-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"/></svg>`; // Eye-slash icon
+        });
+    </script>
+
+</body>
+</html>
