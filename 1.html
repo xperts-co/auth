@@ -3,60 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALLENkkk Login</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ALLEN Login</title>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { background-color: #ffffff; width: 100%; max-width: 450px; min-height: 100vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3498db; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 50px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        header { padding: 16px; display: flex; align-items: center; }
+        .back-arrow { font-size: 24px; font-weight: bold; margin-right: 16px; cursor: pointer; }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #3A3A3A; }
+        main { padding: 24px; flex-grow: 1; }
+        h1 { font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 30px; color: #1c1c1e; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        input { width: 100%; padding: 16px; border: 1px solid #c8c8c8; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        .toggle-password-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; width: 24px; height: 24px; opacity: 0.6; }
+        button { width: 100%; padding: 15px; background-color: #007aff; color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
+        button:disabled { background-color: #a0caff; cursor: not-allowed; }
+        .error { color: #ff3b30; margin-bottom: 15px; font-size: 14px; text-align: center; }
+        footer { text-align: center; padding: 20px; font-size: 14px; color: #666; border-top: 1px solid #f0f0f0; }
+        footer a { color: #007bff; text-decoration: none; font-weight: 500; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header" style="justify-content: center;">
-             <h1>ALLEN</h1>
-        </div>
-       
-        <h2>Login with Email ID</h2>
+    <div id="loader" class="loader"></div>
+    <div id="login-container" class="container hidden">
+        <header>
+            <span class="back-arrow">←</span>
+            <span class="logo">ALLEN</span>
+        </header>
 
-        <form id="login-form">
-            <div class="form-group">
-                <input type="email" id="email" class="form-input" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="password" class="form-input" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn">Login</button>
-        </form>
+        <main>
+            <h1>Login with Email ID</h1>
+            <div id="error-message" class="error"></div>
 
-        <a href="#" class="link">Forgot password?</a>
-        <p id="error-message" class="error-message"></p>
+            <form id="loginForm" novalidate>
+                <div class="input-group">
+                    <input type="email" id="email" name="email" placeholder="Email (or Mobile No)" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="Password">
+                    <span id="togglePassword" class="toggle-password-icon">
+                        <!-- SVG for hidden eye -->
+                        <svg id="eye-hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                        <!-- SVG for visible eye -->
+                        <svg id="eye-visible" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </span>
+                </div>
+                <button type="submit" id="submit-btn">Login</button>
+            </form>
+        </main>
 
-        <p style="margin-top: 2rem;">Don't have an account? <a href="2.html" class="link">Sign Up</a></p>
+        <footer>
+            <p>Having trouble? Write us at <a href="mailto:wecare@allen.in">wecare@allen.in</a></p>
+        </footer>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
-    
-    <!-- Local Scripts -->
-    <script src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
-        // Check if user is already logged in
-        checkAuthState();
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g",
+            authDomain: "custom-practice-xperts.firebaseapp.com",
+            projectId: "custom-practice-xperts",
+            storageBucket: "custom-practice-xperts.appspot.com",
+            messagingSenderId: "348008678781",
+            appId: "1:348008678781:web:a57738e0b878b4b8d97814",
+            measurementId: "G-D5V8DPLK6F"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        const loginForm = document.getElementById('login-form');
-        const errorMessage = document.getElementById('error-message');
+        const loader = document.getElementById('loader');
+        const loginContainer = document.getElementById('login-container');
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMessageDiv = document.getElementById('error-message');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeHidden = document.getElementById('eye-hidden');
+        const eyeVisible = document.getElementById('eye-visible');
 
-        loginForm.addEventListener('submit', (e) => {
+        // Persistent Login Check
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // User is signed in, check their role and status
+                await checkUserStatusAndRedirect(user.uid);
+            } else {
+                // No user is signed in, show the login form
+                loader.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            }
+        });
+        
+        async function checkUserStatusAndRedirect(uid) {
+            try {
+                const userDoc = await db.collection('users').doc(uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    if (userData.role === 'admin') {
+                        window.location.replace('4.html');
+                    } else if (userData.isApproved === true) {
+                        window.location.replace('3.html');
+                    } else {
+                        // User is logged in but not approved
+                        loader.classList.add('hidden');
+                        loginContainer.classList.remove('hidden');
+                        errorMessageDiv.textContent = "Your account is pending admin approval.";
+                        auth.signOut(); // Log them out so they don't get stuck
+                    }
+                } else {
+                     // Profile doesn't exist, maybe mid-signup? Let's log them out.
+                    auth.signOut();
+                    loader.classList.add('hidden');
+                    loginContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Error checking user status:", error);
+                auth.signOut();
+                loader.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            }
+        }
+        
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            errorMessageDiv.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Checking...';
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // Signed in. Auth state listener in app.js will handle redirection.
-                    console.log('Login successful');
-                })
-                .catch((error) => {
-                    errorMessage.textContent = error.message;
-                });
+            let email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // Handle mobile number input by converting to our fake email format
+            if (/^\d{10}$/.test(email)) {
+                email = `${email}@${auth.app.options.authDomain}`;
+            }
+
+            try {
+                // Check if user exists
+                const methods = await auth.fetchSignInMethodsForEmail(email);
+
+                if (methods.length === 0) {
+                    // User does not exist, redirect to signup
+                    alert('This account does not exist. Please sign up.');
+                    const mobile = email.split('@')[0];
+                    window.location.href = `2.html?mobile=${mobile}`;
+                } else {
+                    // User exists, try to sign in
+                    submitBtn.textContent = 'Logging in...';
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    await checkUserStatusAndRedirect(userCredential.user.uid);
+                }
+            } catch (error) {
+                console.error("Login failed:", error);
+                errorMessageDiv.textContent = error.code === 'auth/wrong-password' ? 'Incorrect password.' : 'Login failed. Please try again.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        });
+        
+        togglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeHidden.classList.toggle('hidden', isPassword);
+            eyeVisible.classList.toggle('hidden', !isPassword);
         });
     </script>
 </body>
