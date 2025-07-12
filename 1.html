@@ -3,509 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotstar Video Player</title>
+    <title>Advanced Video Player</title>
     <style>
         :root {
             --primary-color: #1f80e0;
-            --controls-bg: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+            --controls-bg: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0));
             --icon-color: #ffffff;
             --text-color: #e0e0e0;
             --progress-bg: rgba(255, 255, 255, 0.3);
             --progress-buffered: rgba(255, 255, 255, 0.5);
+            --menu-bg: rgba(28, 28, 28, 0.9);
         }
 
         /* Basic Setup */
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0c111b;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: #0c111b;
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: var(--text-color);
         }
 
         /* Video Container */
         .video-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
         }
 
         #video-player {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Use 'cover' to fill screen, 'contain' to show full video */
-            cursor: pointer;
+            width: 100%; height: 100%; object-fit: contain; cursor: pointer;
         }
 
-        /* Center Play/Pause Button */
-        .center-play-button {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--icon-color);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
+        /* Overlays & Popups */
+        .overlay-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Allow clicks to pass through to video */
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .video-container:hover .overlay-ui, .video-container.paused .overlay-ui {
             opacity: 1;
-            transition: opacity 0.3s ease, transform 0.2s ease;
-            z-index: 21;
         }
 
-        .center-play-button:hover {
-            transform: translate(-50%, -50%) scale(1.1);
+        .center-controls {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex; align-items: center; gap: 40px;
         }
 
-        .center-play-button svg {
-            width: 40px;
-            height: 40px;
-            fill: var(--icon-color);
-            pointer-events: none; /* Make sure it doesn't block clicks */
+        .center-button {
+            background: rgba(0, 0, 0, 0.5); border: 2px solid var(--icon-color);
+            border-radius: 50%; width: 70px; height: 70px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: transform 0.2s ease;
+            pointer-events: all;
         }
-        
-        .center-play-button.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        .center-button:hover { transform: scale(1.1); }
+        .center-button svg { width: 36px; height: 36px; fill: var(--icon-color); }
+        .center-play-button.hidden { display: none; }
 
         /* Video Controls Container */
         .video-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 15px;
-            background: var(--controls-bg);
-            opacity: 1;
-            transition: opacity 0.5s ease-in-out;
-            z-index: 20;
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 15px;
+            background: var(--controls-bg); z-index: 20;
+            opacity: 1; transition: opacity 0.5s ease-in-out;
         }
 
-        .video-container.controls-hidden .video-controls {
-            opacity: 0;
-            pointer-events: none;
+        .video-container.controls-hidden .video-controls,
+        .video-container.controls-hidden .overlay-ui {
+            opacity: 0; pointer-events: none;
+        }
+        .video-container.controls-hidden .center-play-button {
+             opacity: 0;
         }
 
-        /* Progress Bar */
+
+        /* Progress Bar & Note Markers */
         .progress-bar-container {
-            width: 100%;
-            height: 15px; /* Taller for easier clicking */
-            cursor: pointer;
-            position: relative;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
+            width: 100%; height: 15px; cursor: pointer;
+            position: relative; margin-bottom: 10px; display: flex; align-items: center;
         }
-        
         .progress-bar-wrapper {
-            width: 100%;
-            height: 5px;
-            background: var(--progress-bg);
-            border-radius: 5px;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 5px; background: var(--progress-bg);
+            border-radius: 5px; position: relative;
         }
-
+        .note-markers-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .note-marker {
+            position: absolute; top: 50%; transform: translate(-50%, -50%);
+            width: 9px; height: 9px; background: var(--primary-color);
+            border-radius: 50%; border: 1px solid white;
+        }
         .buffered-bar, .progress-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
+            position: absolute; top: 0; left: 0; height: 100%;
             border-radius: 5px;
-            transition: width 0.1s linear;
         }
+        .buffered-bar { background: var(--progress-buffered); width: 0; }
+        .progress-bar { background: var(--primary-color); width: 0; z-index: 2; }
         
-        .buffered-bar {
-            background: var(--progress-buffered);
-            width: 0;
-        }
-
-        .progress-bar {
-            background: var(--primary-color);
-            width: 0;
-            z-index: 2;
-        }
-        
-        /* Lower Controls (Buttons, Time) */
+        /* Lower Controls */
         .lower-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
         .controls-left, .controls-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            display: flex; align-items: center; gap: 20px;
         }
-
         .control-button {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            width: 28px;
-            height: 28px;
+            background: none; border: none; padding: 0; cursor: pointer;
+            width: 28px; height: 28px; position: relative;
         }
-        
         .control-button svg {
-            width: 100%;
-            height: 100%;
-            fill: var(--icon-color);
+            width: 100%; height: 100%; fill: var(--icon-color);
             transition: transform 0.2s ease;
         }
-
-        .control-button:hover svg {
-            transform: scale(1.15);
-        }
-        
-        /* Animated Play/Pause SVG */
-        #play-pause-svg .play-icon, #play-pause-svg .pause-icon {
-            transition: d 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .control-button:hover svg { transform: scale(1.15); }
         
         /* Volume Control */
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
+        .volume-container { display: flex; align-items: center; gap: 10px; }
         .volume-slider-container {
-            width: 0;
-            height: 5px;
-            background: var(--progress-bg);
-            border-radius: 5px;
-            cursor: pointer;
-            transition: width 0.3s ease;
-            overflow: hidden;
+            width: 0; height: 5px; background: var(--progress-bg); border-radius: 5px;
+            cursor: pointer; transition: width 0.3s ease; overflow: hidden;
         }
+        .volume-container:hover .volume-slider-container { width: 80px; }
+        .volume-bar { height: 100%; background: var(--icon-color); border-radius: 5px; width: 100%; }
         
-        .volume-container:hover .volume-slider-container {
-            width: 80px;
+        /* Settings Panel */
+        .settings-panel {
+            position: absolute; bottom: 80px; right: 20px;
+            background: var(--menu-bg); border-radius: 8px;
+            width: 200px; padding: 10px; z-index: 30;
+            display: none; /* Toggled by JS */
         }
-        
-        .volume-bar {
-            height: 100%;
-            background: var(--icon-color);
-            border-radius: 5px;
-            width: 100%; /* Default to full */
+        .settings-panel.active { display: block; }
+        .setting-item {
+            padding: 10px; cursor: pointer; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        
-        /* Animated Volume SVG */
-        #volume-svg .volume-path, #volume-svg .mute-path {
-             transition: d 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .setting-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .setting-item .current-value { color: var(--primary-color); }
+        .settings-menu { display: none; /* Toggled by JS */ }
+        .settings-menu .menu-header { font-weight: bold; padding: 10px; border-bottom: 1px solid #444; }
+        .settings-menu .menu-option { padding: 10px; cursor: pointer; border-radius: 4px; }
+        .settings-menu .menu-option:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .settings-menu .menu-option.active { color: var(--primary-color); font-weight: bold; }
 
-        /* Time Display */
-        .time-display {
-            font-size: 14px;
-            font-weight: 500;
+        /* Notes Panel */
+        #notes-panel {
+            position: absolute; top: 0; right: 0; width: 300px; height: 100%;
+            background: rgba(12, 17, 27, 0.95); z-index: 40;
+            transform: translateX(100%); transition: transform 0.4s ease;
+            display: flex; flex-direction: column;
         }
-        
-        /* Fallback message for missing URL */
+        #notes-panel.active { transform: translateX(0); }
+        .notes-header {
+            padding: 15px; font-size: 1.2rem; font-weight: bold;
+            border-bottom: 1px solid #333; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .close-btn { cursor: pointer; font-size: 1.5rem; line-height: 1; }
+        .notes-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        .note-item {
+            background: #1c222e; padding: 12px; border-radius: 6px;
+            margin-bottom: 10px; cursor: pointer; border-left: 3px solid transparent;
+        }
+        .note-item:hover { border-left-color: var(--primary-color); }
+        .note-timestamp { font-weight: bold; color: var(--primary-color); margin-bottom: 5px; }
+        .note-text { font-size: 0.9rem; line-height: 1.4; }
+
+        /* Note Modal */
+        #note-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 50;
+            display: none; justify-content: center; align-items: center;
+        }
+        #note-modal-overlay.active { display: flex; }
+        .note-modal-content {
+            background: #1c222e; padding: 20px; border-radius: 8px;
+            width: 90%; max-width: 500px;
+        }
+        .note-modal-content h3 { margin-top: 0; }
+        #note-textarea {
+            width: 100%; height: 100px; background: #0c111b; color: var(--text-color);
+            border: 1px solid #444; border-radius: 4px; padding: 10px; box-sizing: border-box; resize: vertical;
+        }
+        .note-modal-actions { margin-top: 15px; text-align: right; }
+        .modal-btn {
+            padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;
+            font-weight: bold; margin-left: 10px;
+        }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-secondary { background: #555; color: white; }
+
         .error-message {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2rem;
+            display: none; text-align: center; padding: 20px; font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
 
     <div class="video-container" id="video-container">
-        <video id="video-player" playsinline></video>
-
-        <div id="center-play-btn" class="center-play-button">
-             <svg viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"></path>
-            </svg>
+        <!-- SIMULATED DATA: For a real app, you'd get this from a server -->
+        <video id="video-player" playsinline data-sources='{
+            "1080p": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            "720p": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+            "480p": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+        }'></video>
+        
+        <div class="overlay-ui">
+            <div class="center-controls">
+                <button class="center-button" id="rewind-btn">
+                    <svg viewBox="0 0 24 24"><path d="M11 18V6l-5 6 5 6zm.5-6-5-6v12l5-6zM18 6l-5 6 5 6V6z"></path></svg>
+                </button>
+                <button class="center-button center-play-button" id="center-play-btn">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                </button>
+                 <button class="center-button" id="forward-btn">
+                    <svg viewBox="0 0 24 24"><path d="M13 6v12l5-6-5-6zm-.5 6 5 6V6l-5 6zM6 18l5-6-5-6v12z"></path></svg>
+                </button>
+            </div>
         </div>
         
         <div class="error-message" id="error-message">
             <h2>Video Not Found</h2>
             <p>Please provide a valid video URL using the 'url' parameter.</p>
-            <p>Example: <code>your_page.html?url=https://path/to/video.mp4</code></p>
         </div>
 
         <div class="video-controls" id="video-controls">
-            <!-- Progress Bar -->
             <div class="progress-bar-container" id="progress-bar-container">
                 <div class="progress-bar-wrapper">
+                    <div class="note-markers-container" id="note-markers-container"></div>
                     <div class="buffered-bar" id="buffered-bar"></div>
                     <div class="progress-bar" id="progress-bar"></div>
                 </div>
             </div>
 
-            <!-- Lower Controls -->
             <div class="lower-controls">
                 <div class="controls-left">
                     <button class="control-button" id="play-pause-btn">
-                        <!-- This SVG will be animated with JS -->
-                        <svg id="play-pause-svg" viewBox="0 0 24 24">
-                            <path class="play-icon" d="M8 5v14l11-7z"></path>
-                            <path class="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display:none;"></path>
-                        </svg>
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
                     </button>
-                    
                     <div class="volume-container">
                         <button class="control-button" id="mute-btn">
-                           <!-- This SVG will be animated with JS -->
-                           <svg id="volume-svg" viewBox="0 0 24 24">
-                                <path class="volume-path" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
-                                <path class="mute-path" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" style="display:none;"></path>
-                           </svg>
+                           <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>
                         </button>
                         <div class="volume-slider-container" id="volume-slider-container">
                             <div class="volume-bar" id="volume-bar"></div>
                         </div>
                     </div>
-
-                    <div class="time-display" id="time-display">
-                        00:00 / 00:00
-                    </div>
+                    <div class="time-display" id="time-display">00:00 / 00:00</div>
                 </div>
                 <div class="controls-right">
+                    <button class="control-button" id="add-note-btn" title="Add Note">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"></path></svg>
+                    </button>
                     <button class="control-button" id="settings-btn">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
-                        </svg>
+                        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22-.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path></svg>
                     </button>
                     <button class="control-button" id="fullscreen-btn">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path>
-                        </svg>
+                        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel Popup -->
+        <div class="settings-panel" id="settings-panel">
+            <div id="settings-main">
+                <div class="setting-item" data-menu="quality">
+                    <span>Quality</span>
+                    <span class="current-value" id="current-quality">Auto</span>
+                </div>
+                <div class="setting-item" data-menu="speed">
+                    <span>Speed</span>
+                    <span class="current-value" id="current-speed">1x</span>
+                </div>
+            </div>
+            <div class="settings-menu" id="settings-quality">
+                 <div class="menu-header">Quality</div>
+            </div>
+            <div class="settings-menu" id="settings-speed">
+                <div class="menu-header">Playback Speed</div>
+                <div class="menu-option" data-speed="0.5">0.5x</div>
+                <div class="menu-option active" data-speed="1">1x</div>
+                <div class="menu-option" data-speed="1.5">1.5x</div>
+                <div class="menu-option" data-speed="2">2x</div>
+            </div>
+        </div>
+
+        <!-- Notes Side Panel -->
+        <div id="notes-panel">
+            <div class="notes-header">
+                <span>Notes</span>
+                <span class="close-btn" id="close-notes-btn">×</span>
+            </div>
+            <div class="notes-list" id="notes-list">
+                <!-- Notes will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <!-- Note Creation Modal -->
+        <div id="note-modal-overlay">
+            <div class="note-modal-content">
+                <h3>Add a note at <span id="note-modal-timestamp"></span></h3>
+                <textarea id="note-textarea" placeholder="Write your thoughts here..."></textarea>
+                <div class="note-modal-actions">
+                    <button class="modal-btn btn-secondary" id="cancel-note-btn">Cancel</button>
+                    <button class="modal-btn btn-primary" id="save-note-btn">Save Note</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // DOM Elements
-            const videoContainer = document.getElementById('video-container');
-            const video = document.getElementById('video-player');
-            const errorMessage = document.getElementById('error-message');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const centerPlayBtn = document.getElementById('center-play-btn');
-            
-            // SVG Icon Paths for Animation
-            const playIcon = playPauseBtn.querySelector('.play-icon');
-            const pauseIcon = playPauseBtn.querySelector('.pause-icon');
-            const playPath = "M8 5v14l11-7z";
-            const pausePath = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const videoContainer = document.getElementById('video-container');
+        const video = document.getElementById('video-player');
+        const errorMessage = document.getElementById('error-message');
+        const videoControls = document.getElementById('video-controls');
+        
+        // Play/Pause
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const centerPlayBtn = document.getElementById('center-play-btn');
+        const playIconPath = "M8 5v14l11-7z";
+        const pauseIconPath = "M6 19h4V5H6v14zm8-14v14h4V5h-4z";
 
-            const volumeBtn = document.getElementById('mute-btn');
-            const volumeIcon = volumeBtn.querySelector('.volume-path');
-            const muteIcon = volumeBtn.querySelector('.mute-path');
-            const volumePath = "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z";
-            const mutePath = "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z";
+        // Skip buttons
+        const rewindBtn = document.getElementById('rewind-btn');
+        const forwardBtn = document.getElementById('forward-btn');
 
-            const progressBarContainer = document.getElementById('progress-bar-container');
-            const progressBar = document.getElementById('progress-bar');
-            const bufferedBar = document.getElementById('buffered-bar');
-            const timeDisplay = document.getElementById('time-display');
-            const volumeSliderContainer = document.getElementById('volume-slider-container');
-            const volumeBar = document.getElementById('volume-bar');
-            const fullscreenBtn = document.getElementById('fullscreen-btn');
+        // Progress & Time
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBar = document.getElementById('progress-bar');
+        const bufferedBar = document.getElementById('buffered-bar');
+        const timeDisplay = document.getElementById('time-display');
 
-            let controlsTimeout;
+        // Volume
+        const muteBtn = document.getElementById('mute-btn');
+        const volumeSliderContainer = document.getElementById('volume-slider-container');
+        const volumeBar = document.getElementById('volume-bar');
 
-            // --- URL Parameter Logic ---
-            const urlParams = new URLSearchParams(window.location.search);
-            const videoUrl = urlParams.get('url');
+        // Fullscreen
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
 
-            if (videoUrl) {
-                video.src = decodeURIComponent(videoUrl);
+        // Settings
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsMain = document.getElementById('settings-main');
+        const qualityMenu = document.getElementById('settings-quality');
+        const speedMenu = document.getElementById('settings-speed');
+        const currentQualityEl = document.getElementById('current-quality');
+        const currentSpeedEl = document.getElementById('current-speed');
+        
+        // Notes
+        const addNoteBtn = document.getElementById('add-note-btn');
+        const notesPanel = document.getElementById('notes-panel');
+        const closeNotesBtn = document.getElementById('close-notes-btn');
+        const notesList = document.getElementById('notes-list');
+        const noteMarkersContainer = document.getElementById('note-markers-container');
+        const noteModalOverlay = document.getElementById('note-modal-overlay');
+        const noteModalTimestamp = document.getElementById('note-modal-timestamp');
+        const noteTextarea = document.getElementById('note-textarea');
+        const saveNoteBtn = document.getElementById('save-note-btn');
+        const cancelNoteBtn = document.getElementById('cancel-note-btn');
+
+        // --- State ---
+        let controlsTimeout;
+        let notes = [];
+        let videoSources = {};
+        let currentVideoUrl = '';
+
+        // --- URL Parameter Logic ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoUrlFromParam = urlParams.get('url');
+        
+        if (videoUrlFromParam) {
+            currentVideoUrl = decodeURIComponent(videoUrlFromParam);
+            video.src = currentVideoUrl;
+            videoSources = { 'Auto': currentVideoUrl }; // Start with the provided URL
+        } else {
+            // Use data-sources if no URL param
+            const sourcesData = JSON.parse(video.dataset.sources || '{}');
+            const defaultQuality = Object.keys(sourcesData)[0];
+            if (defaultQuality) {
+                videoSources = sourcesData;
+                currentVideoUrl = sourcesData[defaultQuality];
+                video.src = currentVideoUrl;
             } else {
-                videoContainer.style.display = 'none';
-                errorMessage.style.display = 'block';
-                return; // Stop script execution if no URL
+                 videoContainer.style.display = 'none';
+                 errorMessage.style.display = 'block';
+                 return;
             }
+        }
+        
+        // --- Helper Functions ---
+        const formatTime = (timeInSeconds) => {
+            const date = new Date(timeInSeconds * 1000);
+            const hours = date.getUTCHours();
+            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+            const seconds = date.getUTCSeconds().toString().padStart(2, '0');
+            if (hours > 0) {
+                return `${hours}:${minutes}:${seconds}`;
+            }
+            return `${minutes}:${seconds}`;
+        };
 
-            // --- Player Functions ---
-            const togglePlay = () => {
-                if (video.paused || video.ended) {
-                    video.play();
-                } else {
-                    video.pause();
-                }
-            };
+        const hideControls = () => {
+            if (video.paused || settingsPanel.classList.contains('active')) return;
+            videoContainer.classList.add('controls-hidden');
+        };
 
-            const updatePlayPauseIcon = () => {
-                if (video.paused || video.ended) {
-                    playIcon.setAttribute('d', playPath);
-                    centerPlayBtn.classList.remove('hidden');
-                } else {
-                    playIcon.setAttribute('d', pausePath);
-                    centerPlayBtn.classList.add('hidden');
-                }
-            };
-            
-            const formatTime = (timeInSeconds) => {
-                const result = new Date(timeInSeconds * 1000).toISOString().substr(11, 8);
-                return {
-                    minutes: result.substr(3, 2),
-                    seconds: result.substr(6, 2),
-                    hours: result.substr(0, 2),
-                };
-            };
+        const showControls = () => {
+            videoContainer.classList.remove('controls-hidden');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(hideControls, 3000);
+        };
 
-            const updateTimeDisplay = () => {
-                const currentTime = formatTime(video.currentTime);
-                const duration = formatTime(video.duration);
-                
-                if(isNaN(video.duration)){
-                    timeDisplay.textContent = `00:00 / 00:00`;
-                    return;
-                }
-
-                if (video.duration >= 3600) {
-                    timeDisplay.textContent = `${currentTime.hours}:${currentTime.minutes}:${currentTime.seconds} / ${duration.hours}:${duration.minutes}:${duration.seconds}`;
-                } else {
-                    timeDisplay.textContent = `${currentTime.minutes}:${currentTime.seconds} / ${duration.minutes}:${duration.seconds}`;
-                }
-            };
-            
-            const updateProgress = () => {
-                const progressPercent = (video.currentTime / video.duration) * 100;
-                progressBar.style.width = `${progressPercent}%`;
-
-                if (video.buffered.length > 0) {
-                    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                    const bufferedPercent = (bufferedEnd / video.duration) * 100;
-                    bufferedBar.style.width = `${bufferedPercent}%`;
-                }
-            };
-            
-            const seek = (e) => {
-                const rect = progressBarContainer.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const width = progressBarContainer.clientWidth;
-                const duration = video.duration;
-                video.currentTime = (clickX / width) * duration;
-            };
-
-            const updateVolume = (e) => {
-                const rect = volumeSliderContainer.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                let volume = clickX / volumeSliderContainer.clientWidth;
-                volume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
-                video.volume = volume;
-                video.muted = false;
-            };
-
-            const updateVolumeBar = () => {
-                const volume = video.muted ? 0 : video.volume;
-                volumeBar.style.width = `${volume * 100}%`;
-                if (video.muted || video.volume === 0) {
-                    volumeIcon.setAttribute('d', mutePath);
-                } else {
-                    volumeIcon.setAttribute('d', volumePath);
-                }
-            };
-            
-            let lastVolume = 1;
-            const toggleMute = () => {
-                if (video.muted || video.volume === 0) {
-                    video.muted = false;
-                    video.volume = lastVolume > 0.1 ? lastVolume : 1;
-                } else {
-                    lastVolume = video.volume;
-                    video.muted = true;
-                    video.volume = 0;
-                }
-            };
-
-            const toggleFullscreen = () => {
-                if (!document.fullscreenElement) {
-                    videoContainer.requestFullscreen().catch(err => {
-                        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                    });
-                } else {
-                    document.exitFullscreen();
-                }
-            };
-
-            const hideControls = () => {
-                if (video.paused) return;
-                videoContainer.classList.add('controls-hidden');
-            };
-
-            const showControls = () => {
-                videoContainer.classList.remove('controls-hidden');
-                clearTimeout(controlsTimeout);
-                controlsTimeout = setTimeout(hideControls, 3000);
-            };
-
-            // --- Event Listeners ---
-            video.addEventListener('play', updatePlayPauseIcon);
-            video.addEventListener('pause', updatePlayPauseIcon);
-            video.addEventListener('loadedmetadata', () => {
-                updateTimeDisplay();
-                updateProgress();
-            });
-            video.addEventListener('timeupdate', () => {
-                updateTimeDisplay();
-                updateProgress();
-            });
-            video.addEventListener('volumechange', updateVolumeBar);
-            video.addEventListener('progress', updateProgress);
-            
-            playPauseBtn.addEventListener('click', togglePlay);
-            centerPlayBtn.addEventListener('click', togglePlay);
-            video.addEventListener('click', togglePlay);
-
-            progressBarContainer.addEventListener('click', seek);
-            
-            volumeBtn.addEventListener('click', toggleMute);
-            volumeSliderContainer.addEventListener('click', updateVolume);
-
-            fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-            videoContainer.addEventListener('mousemove', showControls);
-            videoContainer.addEventListener('mouseleave', hideControls);
-            
-            // Keyboard Shortcuts
-            document.addEventListener('keydown', (e) => {
-                switch (e.key.toLowerCase()) {
-                    case ' ':
-                        e.preventDefault();
-                        togglePlay();
-                        break;
-                    case 'f':
-                        toggleFullscreen();
-                        break;
-                    case 'm':
-                        toggleMute();
-                        break;
-                    case 'arrowright':
-                        video.currentTime += 5;
-                        break;
-                    case 'arrowleft':
-                        video.currentTime -= 5;
-                        break;
-                }
-            });
-            
-            // Initial state
-            updatePlayPauseIcon();
-            updateVolumeBar();
-            showControls();
-        });
-    </script>
-</body>
-</html>
+        // 
